@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 StudyCards - Gestor de Tareas</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        :root {
+            --bg: #0f0f1a;
+            --card: #1a1a2e;
+            --accent: #00d9ff;
+            --accent2: #ff6b6b;
+            --text: #eee;
+            --text-muted: #888;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 1rem;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        
+        /* Formulario para agregar */
+        .add-card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .add-card h2 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            background: #16213e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 0.75rem;
+            color: var(--text);
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        select {
+            cursor: pointer;
+        }
+        
+        .btn {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            width: 100%;
+            transition: transform 0.1s;
+        }
+        
+        .btn:hover {
+            transform: scale(1.02);
+        }
+        
+        .btn:active {
+            transform: scale(0.98);
+        }
+        
+        .btn-delete {
+            background: var(--accent2);
+        }
+        
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat {
+            background: var(--card);
+            padding: 1rem;
+            border-radius: 12px;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        /* Filtros */
+        .filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background: var(--card);
+            color: var(--text-muted);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn.active {
+            background: var(--accent);
+            color: var(--bg);
+        }
+        
+        /* Lista de tareas */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .task {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            transition: all 0.3s;
+        }
+        
+        .task.completed {
+            opacity: 0.5;
+        }
+        
+        .task.completed .task-question {
+            text-decoration: line-through;
+        }
+        
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .task.completed .task-checkbox {
+            background: var(--accent);
+            color: var(--bg);
+        }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-question {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .task-answer {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .task-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .task-tag {
+            background: #16213e;
+            color: var(--accent);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+        }
+        
+        .task-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .task-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.25rem;
+            transition: color 0.2s;
+        }
+        
+        .task-btn:hover {
+            color: var(--accent2);
+        }
+        
+        /* Empty state */
+        .empty {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 2rem;
+        }
+        
+        /* Modal de edición */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+        }
+        
+        .modal h2 {
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        
+        .modal-actions .btn {
+            flex: 1;
+        }
+        
+        /* PWA Install prompt */
+        .install-prompt {
+            background: var(--accent);
+            color: var(--bg);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .install-prompt.show {
+            display: flex;
+        }
+        
+        .install-prompt button {
+            background: var(--bg);
+            color: var(--accent);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        /* Instructions */
+        .instructions {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        
+        .instructions p {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        .instructions strong {
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 StudyCards</h1>
+        <p class="subtitle">Gestor de tareas de estudio</p>
+        
+        <!-- PWA Install -->
+        <div class="install-prompt" id="installPrompt">
+            <span>📱 Instalá la app en tu celular</span>
+            <button id="installBtn">Instalar</button>
+        </div>
+        
+        <!-- Instrucciones -->
+        <div class="instructions">
+            <p>💾 Los datos se guardan en tu navegador</p>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="totalCount">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="pendingCount">0</div>
+                <div class="stat-label">Pendientes</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="completedCount">0</div>
+                <div class="stat-label">Completadas</div>
+            </div>
+        </div>
+        
+        <!-- Agregar tarea -->
+        <div class="add-card">
+            <h2>➕ Nueva Tarjeta</h2>
+            <input type="text" id="questionInput" placeholder="Pregunta o título">
+            <textarea id="answerInput" placeholder="Respuesta o descripción"></textarea>
+            <select id="subjectInput">
+                <option value="General">General</option>
+                <option value="Matemáticas">Matemáticas</option>
+                <option value="Historia">Historia</option>
+                <option value="Ciencias">Ciencias</option>
+                <option value="Idioma">Idioma</option>
+                <option value="Programación">Programación</option>
+                <option value="Otro">Otro</option>
+            </select>
+            <button class="btn" onclick="addTask()">✅ Agregar Tarjeta</button>
+        </div>
+        
+        <!-- Filtros -->
+        <div class="filters">
+            <button class="filter-btn active" onclick="filterTasks('all')">Todas</button>
+            <button class="filter-btn" onclick="filterTasks('pending')">Pendientes</button>
+            <button class="filter-btn" onclick="filterTasks('completed')">Completadas</button>
+            <button class="filter-btn" onclick="filterTasks('subject')">Por Materia</button>
+        </div>
+        
+        <!-- Lista -->
+        <div class="task-list" id="taskList">
+            <div class="empty">No hay tarjetas aún. ¡Agregá una!</div>
+        </div>
+    </div>
+    
+    <!-- Modal de edición -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2>✏️ Editar Tarjeta</h2>
+            <input type="hidden" id="editId">
+            <input type="text" id="editQuestion" placeholder="Pregunta o título">
+            <textarea id="editAnswer" placeholder="Respuesta o descripción"></textarea>
+            <select id="editSubject">
+                <option value="General">General</option>
+                <option value="Matemáticas">Matemáticas</option>
+                <option value="Historia">Historia</option>
+                <option value="Ciencias">Ciencias</option>
+                <option value="Idioma">Idioma</option>
+                <option value="Programación">Programación</option>
+                <option value="Otro">Otro</option>
+            </select>
+            <div class="modal-actions">
+                <button class="btn" onclick="saveEdit()">💾 Guardar</button>
+                <button class="btn btn-delete" onclick="closeModal()">❌ Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============== DATA MANAGEMENT ==============
+        const STORAGE_KEY = 'studycards_data';
+        
+        function loadTasks() {
+            const data = localStorage.getItem(STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        }
+        
+        function saveTasks(tasks) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        }
+        
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+        
+        // ============== TASK OPERATIONS ==============
+        let currentFilter = 'all';
+        
+        function addTask() {
+            const question = document.getElementById('questionInput').value.trim();
+            const answer = document.getElementById('answerInput').value.trim();
+            const subject = document.getElementById('subjectInput').value;
+            
+            if (!question) {
+                alert('Por favor ingresa una pregunta o título');
+                return;
+            }
+            
+            const tasks = loadTasks();
+            tasks.push({
+                id: generateId(),
+                question,
+                answer,
+                subject,
+                completed: false,
+                createdAt: new Date().toISOString()
+            });
+            
+            saveTasks(tasks);
+            
+            // Clear form
+            document.getElementById('questionInput').value = '';
+            document.getElementById('answerInput').value = '';
+            
+            renderTasks();
+        }
+        
+        function toggleTask(id) {
+            const tasks = loadTasks();
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                saveTasks(tasks);
+                renderTasks();
+            }
+        }
+        
+        function deleteTask(id) {
+            if (!confirm('¿Eliminar esta tarjeta?')) return;
+            
+            const tasks = loadTasks().filter(t => t.id !== id);
+            saveTasks(tasks);
+            renderTasks();
+        }
+        
+        function openEditModal(id) {
+            const task = loadTasks().find(t => t.id === id);
+            if (!task) return;
+            
+            document.getElementById('editId').value = id;
+            document.getElementById('editQuestion').value = task.question;
+            document.getElementById('editAnswer').value = task.answer;
+            document.getElementById('editSubject').value = task.subject;
+            
+            document.getElementById('editModal').classList.add('active');
+        }
+        
+        function closeModal() {
+            document.getElementById('editModal').classList.remove('active');
+        }
+        
+        function saveEdit() {
+            const id = document.getElementById('editId').value;
+            const tasks = loadTasks();
+            const task = tasks.find(t => t.id === id);
+            
+            if (task) {
+                task.question = document.getElementById('editQuestion').value.trim();
+                task.answer = document.getElementById('editAnswer').value.trim();
+                task.subject = document.getElementById('editSubject').value;
+                saveTasks(tasks);
+                closeModal();
+                renderTasks();
+            }
+        }
+        
+        function filterTasks(filter) {
+            currentFilter = filter;
+            
+            // Update buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(filter === 'all' ? 'todas' : filter === 'pending' ? 'pendientes' : filter === 'completed' ? 'completadas' : 'materia')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // Handle subject filter separately
+            if (filter === 'subject') {
+                const subjects = [...new Set(loadTasks().map(t => t.subject))];
+                const subject = prompt('Selecciona materia:\n' + subjects.join('\n'));
+                currentFilter = { type: 'subject', value: subject };
+            }
+            
+            renderTasks();
+        }
+        
+        function getFilteredTasks() {
+            const tasks = loadTasks();
+            
+            if (currentFilter === 'all') return tasks;
+            if (currentFilter === 'pending') return tasks.filter(t => !t.completed);
+            if (currentFilter === 'completed') return tasks.filter(t => t.completed);
+            if (currentFilter.type === 'subject') return tasks.filter(t => t.subject === currentFilter.value);
+            
+            return tasks;
+        }
+        
+        // ============== RENDER ==============
+        function renderTasks() {
+            const tasks = getFilteredTasks();
+            const taskList = document.getElementById('taskList');
+            
+            // Update stats
+            const allTasks = loadTasks();
+            document.getElementById('totalCount').textContent = allTasks.length;
+            document.getElementById('pendingCount').textContent = allTasks.filter(t => !t.completed).length;
+            document.getElementById('completedCount').textContent = allTasks.filter(t => t.completed).length;
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = '<div class="empty">No hay tarjetas para mostrar</div>';
+                return;
+            }
+            
+            taskList.innerHTML = tasks.map(task => `
+                <div class="task ${task.completed ? 'completed' : ''}">
+                    <div class="task-checkbox" onclick="toggleTask('${task.id}')">
+                        ${task.completed ? '✓' : ''}
+                    </div>
+                    <div class="task-content" onclick="toggleTask('${task.id}')">
+                        <div class="task-question">${escapeHtml(task.question)}</div>
+                        ${task.answer ? `<div class="task-answer">${escapeHtml(task.answer)}</div>` : ''}
+                        <div class="task-meta">
+                            <span class="task-tag">${task.subject}</span>
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="task-btn" onclick="openEditModal('${task.id}')" title="Editar">✏️</button>
+                        <button class="task-btn" onclick="deleteTask('${task.id}')" title="Eliminar">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // ============== PWA ==============
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').classList.add('show');
+        });
+        
+        document.getElementById('installBtn').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                document.getElementById('installPrompt').classList.remove('show');
+            }
+        });
+        
+        // Service Worker for offline support
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
+        }
+        
+        // ============== KEYBOARD SHORTCUTS ==============
+        document.addEventListener('keydown', (e) => {
+            // Enter to submit if in input fields
+            if (e.key === 'Enter' && !e.shiftKey) {
+                const active = document.activeElement;
+                if (active.id === 'questionInput' || active.id === 'answerInput') {
+                    addTask();
+                }
+            }
+            
+            // Escape to close modal
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+        
+        // ============== INIT ==============
+        renderTasks();
+    </script>
+</body>
+</html>
