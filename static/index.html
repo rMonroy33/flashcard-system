@@ -380,6 +380,29 @@
             font-size: 0.85rem;
         }
         
+        .sync-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-left: 0.5rem;
+        }
+        
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ccc;
+        }
+        
+        .sync-dot.synced { background: #5b8a72; }
+        .sync-dot.syncing { background: #e07a5f; animation: pulse 1s infinite; }
+        .sync-dot.error { background: #e74c3c; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
         /* Study Button */
         .study-btn {
             background: var(--gradient-accent);
@@ -640,7 +663,7 @@
         
         <!-- Instrucciones -->
         <div class="instructions">
-            <p>💾 Los datos se guardan en tu navegador · ✨ Toca una tarjeta para marcar</p>
+            <p>💾 Datos en Firebase <span class="sync-status"><span class="sync-dot" id="syncDot"></span><span id="syncText">Conectando...</span></span></p>
         </div>
         
         <!-- Stats -->
@@ -687,7 +710,7 @@
         <div class="task-list" id="taskList">
             <div class="empty">
                 <div class="empty-icon">📋</div>
-                <p>No hay tarjetas aún.<br>¡Agrega tu primera tarjeta!</p>
+                <p>Cargando...</p>
             </div>
         </div>
     </div>
@@ -715,17 +738,103 @@
         </div>
     </div>
 
-    <script>
-        // ============== DATA MANAGEMENT ==============
-        const STORAGE_KEY = 'studycards_data';
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, get, set, push, remove, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCg_o2Iax1zkTToZLDfEh6XHGz_5w8Ey5g",
+            authDomain: "flashmed-87e1b.firebaseapp.com",
+            databaseURL: "https://flashmed-87e1b-default-rtdb.firebaseio.com",
+            projectId: "flashmed-87e1b",
+            storageBucket: "flashmed-87e1b.firebasestorage.app",
+            messagingSenderId: "345046994653",
+            appId: "1:345046994653:web:67cb110ee172219166d534"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
         
-        function loadTasks() {
-            const data = localStorage.getItem(STORAGE_KEY);
-            return data ? JSON.parse(data) : [];
+        // Make db available globally
+        window.db = db;
+        window.ref = ref;
+        window.get = get;
+        window.set = set;
+        window.push = push;
+        window.remove = remove;
+        window.update = update;
+        window.onValue = onValue;
+        
+        // Notify app is ready
+        window.firebaseReady = true;
+        
+        // Dispatch event when Firebase is loaded
+        window.dispatchEvent(new Event('firebaseReady'));
+    </script>
+
+    <script>
+        // ============== DATA MANAGEMENT WITH FIREBASE ==============
+        let tasks = [];
+        let firebaseReady = false;
+        let currentFilter = 'all';
+        
+        const syncDot = document.getElementById('syncDot');
+        const syncText = document.getElementById('syncText');
+        
+        function setSyncStatus(status, message) {
+            syncDot.className = 'sync-dot ' + status;
+            syncText.textContent = message;
         }
         
-        function saveTasks(tasks) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        // Wait for Firebase before initializing
+        window.addEventListener('firebaseReady', () => {
+            firebaseReady = true;
+            setSyncStatus('syncing', 'Sincronizando...');
+            loadTasksFromFirebase();
+        });
+        
+        // Fallback if Firebase takes too long
+        setTimeout(() => {
+            if (!firebaseReady) {
+                setSyncStatus('error', 'Error de conexión');
+            }
+        }, 10000);
+
+        async function loadTasksFromFirebase() {
+            try {
+                const tasksRef = ref(db, 'tasks');
+                const snapshot = await get(tasksRef);
+                
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    tasks = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                } else {
+                    tasks = [];
+                }
+                
+                setSyncStatus('synced', 'Sincronizado');
+                renderTasks();
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                setSyncStatus('error', 'Error de sync');
+            }
+        }
+
+        async function saveTasksToFirebase() {
+            try {
+                setSyncStatus('syncing', 'Guardando...');
+                const tasksRef = ref(db, 'tasks');
+                const tasksData = {};
+                tasks.forEach(t => {
+                    tasksData[t.id] = { question: t.question, answer: t.answer, subject: t.subject, completed: t.completed, createdAt: t.createdAt };
+                });
+                await set(tasksRef, tasksData);
+                setSyncStatus('synced', 'Sincronizado');
+            } catch (error) {
+                console.error('Error saving tasks:', error);
+                setSyncStatus('error', 'Error al guardar');
+            }
         }
         
         function generateId() {
@@ -733,9 +842,7 @@
         }
         
         // ============== TASK OPERATIONS ==============
-        let currentFilter = 'all';
-        
-        function addTask() {
+        async function addTask() {
             const question = document.getElementById('questionInput').value.trim();
             const answer = document.getElementById('answerInput').value.trim();
             const subject = document.getElementById('subjectInput').value;
@@ -745,44 +852,42 @@
                 return;
             }
             
-            const tasks = loadTasks();
-            tasks.push({
+            const newTask = {
                 id: generateId(),
                 question,
                 answer,
                 subject,
                 completed: false,
                 createdAt: new Date().toISOString()
-            });
+            };
             
-            saveTasks(tasks);
+            tasks.push(newTask);
+            renderTasks();
+            await saveTasksToFirebase();
             
             document.getElementById('questionInput').value = '';
             document.getElementById('answerInput').value = '';
-            
-            renderTasks();
         }
         
-        function toggleTask(id) {
-            const tasks = loadTasks();
+        async function toggleTask(id) {
             const task = tasks.find(t => t.id === id);
             if (task) {
                 task.completed = !task.completed;
-                saveTasks(tasks);
                 renderTasks();
+                await saveTasksToFirebase();
             }
         }
         
-        function deleteTask(id) {
+        async function deleteTask(id) {
             if (!confirm('¿Eliminar esta tarjeta?')) return;
             
-            const tasks = loadTasks().filter(t => t.id !== id);
-            saveTasks(tasks);
+            tasks = tasks.filter(t => t.id !== id);
             renderTasks();
+            await saveTasksToFirebase();
         }
         
         function openEditModal(id) {
-            const task = loadTasks().find(t => t.id === id);
+            const task = tasks.find(t => t.id === id);
             if (!task) return;
             
             document.getElementById('editId').value = id;
@@ -797,18 +902,17 @@
             document.getElementById('editModal').classList.remove('active');
         }
         
-        function saveEdit() {
+        async function saveEdit() {
             const id = document.getElementById('editId').value;
-            const tasks = loadTasks();
             const task = tasks.find(t => t.id === id);
             
             if (task) {
                 task.question = document.getElementById('editQuestion').value.trim();
                 task.answer = document.getElementById('editAnswer').value.trim();
                 task.subject = document.getElementById('editSubject').value;
-                saveTasks(tasks);
-                closeModal();
                 renderTasks();
+                await saveTasksToFirebase();
+                closeModal();
             }
         }
         
@@ -824,8 +928,6 @@
         }
         
         function getFilteredTasks() {
-            const tasks = loadTasks();
-            
             if (currentFilter === 'all') return tasks;
             if (currentFilter === 'pending') return tasks.filter(t => !t.completed);
             if (currentFilter === 'completed') return tasks.filter(t => t.completed);
@@ -835,15 +937,14 @@
         
         // ============== RENDER ==============
         function renderTasks() {
-            const tasks = getFilteredTasks();
-            const allTasks = loadTasks();
+            const filtered = getFilteredTasks();
             const taskList = document.getElementById('taskList');
             
-            document.getElementById('totalCount').textContent = allTasks.length;
-            document.getElementById('pendingCount').textContent = allTasks.filter(t => !t.completed).length;
-            document.getElementById('completedCount').textContent = allTasks.filter(t => t.completed).length;
+            document.getElementById('totalCount').textContent = tasks.length;
+            document.getElementById('pendingCount').textContent = tasks.filter(t => !t.completed).length;
+            document.getElementById('completedCount').textContent = tasks.filter(t => t.completed).length;
             
-            if (tasks.length === 0) {
+            if (filtered.length === 0) {
                 taskList.innerHTML = `
                     <div class="empty">
                         <div class="empty-icon">📋</div>
@@ -853,9 +954,9 @@
                 return;
             }
             
-            const pendingCount = allTasks.filter(t => !t.completed).length;
+            const pendingCount = tasks.filter(t => !t.completed).length;
             
-            taskList.innerHTML = tasks.map(task => `
+            taskList.innerHTML = filtered.map(task => `
                 <div class="task ${task.completed ? 'completed' : ''}">
                     <div class="task-checkbox" onclick="toggleTask('${task.id}')">
                         ${task.completed ? '✓' : ''}
@@ -914,14 +1015,14 @@
         let isFlipped = false;
 
         function startStudyMode(shuffle = false) {
-            const tasks = loadTasks().filter(t => !t.completed);
+            const pending = tasks.filter(t => !t.completed);
             
-            if (tasks.length === 0) {
+            if (pending.length === 0) {
                 alert('No hay tarjetas para estudiar');
                 return;
             }
             
-            studyTasks = shuffle ? [...tasks].sort(() => Math.random() - 0.5) : [...tasks];
+            studyTasks = shuffle ? [...pending].sort(() => Math.random() - 0.5) : [...pending];
             studyIndex = 0;
             isFlipped = false;
             
@@ -991,11 +1092,7 @@
 
         function closeStudyMode() {
             document.getElementById('studyModal').classList.remove('active');
-            renderTasks();
         }
-
-        // ============== INIT ==============
-        renderTasks();
     </script>
 
     <!-- Study Mode Modal -->
