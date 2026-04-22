@@ -340,6 +340,166 @@
         .instructions strong {
             color: var(--accent);
         }
+
+        /* Study Mode */
+        .study-btn {
+            background: #00ff88;
+            color: #1a1a2e;
+            margin-top: 0.5rem;
+        }
+        
+        .study-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg);
+            z-index: 2000;
+            flex-direction: column;
+        }
+        
+        .study-modal.active {
+            display: flex;
+        }
+        
+        .study-header {
+            background: var(--card);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .study-header h2 {
+            color: var(--accent);
+            font-size: 1.1rem;
+        }
+        
+        .study-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+        
+        .study-close:hover {
+            color: var(--accent2);
+        }
+        
+        .study-progress {
+            background: var(--card);
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .study-progress-bar {
+            flex: 1;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .study-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+        
+        .study-counter {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+        
+        .study-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .study-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .study-card-front {
+            font-size: 1.3rem;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+        
+        .study-card-back {
+            background: #0f3460;
+            padding: 1.5rem;
+            border-radius: 12px;
+            color: #ccc;
+            display: none;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+        
+        .study-card-back.visible {
+            display: block;
+        }
+        
+        .study-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .study-actions .btn {
+            width: auto;
+            min-width: 140px;
+        }
+        
+        .study-finish {
+            text-align: center;
+        }
+        
+        .study-finish h2 {
+            color: #00ff88;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        
+        .study-finish p {
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+        
+        .study-empty {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 3rem;
+        }
+        
+        .study-shuffle {
+            background: #9b59b6;
+        }
+        
+        .study-shuffle:hover {
+            background: #8e44ad;
+        }
+
+        .study-btn-small {
+            color: #00ff88 !important;
+        }
     </style>
 </head>
 <body>
@@ -561,10 +721,10 @@
         // ============== RENDER ==============
         function renderTasks() {
             const tasks = getFilteredTasks();
+            const allTasks = loadTasks();
             const taskList = document.getElementById('taskList');
             
             // Update stats
-            const allTasks = loadTasks();
             document.getElementById('totalCount').textContent = allTasks.length;
             document.getElementById('pendingCount').textContent = allTasks.filter(t => !t.completed).length;
             document.getElementById('completedCount').textContent = allTasks.filter(t => t.completed).length;
@@ -573,6 +733,11 @@
                 taskList.innerHTML = '<div class="empty">No hay tarjetas para mostrar</div>';
                 return;
             }
+            
+            const pendingCount = allTasks.filter(t => !t.completed).length;
+            const studyBtn = pendingCount > 0 
+                ? `<button class="task-btn study-btn-small" onclick="event.stopPropagation(); startStudyMode()" title="Estudiar">📖</button>` 
+                : '';
             
             taskList.innerHTML = tasks.map(task => `
                 <div class="task ${task.completed ? 'completed' : ''}">
@@ -587,11 +752,26 @@
                         </div>
                     </div>
                     <div class="task-actions">
+                        ${studyBtn}
                         <button class="task-btn" onclick="openEditModal('${task.id}')" title="Editar">✏️</button>
                         <button class="task-btn" onclick="deleteTask('${task.id}')" title="Eliminar">🗑️</button>
                     </div>
                 </div>
             `).join('');
+            
+            // Add global study button if there are pending tasks
+            const existingStudyBtn = document.querySelector('.study-launch-btn');
+            if (existingStudyBtn) existingStudyBtn.remove();
+            
+            if (pendingCount > 0) {
+                const statsDiv = document.querySelector('.stats');
+                const studyLaunchBtn = document.createElement('button');
+                studyLaunchBtn.className = 'btn study-launch-btn';
+                studyLaunchBtn.style.cssText = 'margin-top:1rem; background:#00ff88; color:#1a1a2e;';
+                studyLaunchBtn.textContent = `📖 Estudiar ${pendingCount} tarjetas`;
+                studyLaunchBtn.onclick = () => startStudyMode();
+                statsDiv.parentNode.insertBefore(studyLaunchBtn, statsDiv.nextSibling);
+            }
         }
         
         function escapeHtml(text) {
@@ -639,8 +819,108 @@
             }
         });
         
+
+
+        // ============== STUDY MODE ==============
+        let studyTasks = [];
+        let studyIndex = 0;
+        let studyAnswered = false;
+
+        function startStudyMode(shuffle = false) {
+            const tasks = loadTasks().filter(t => !t.completed);
+            
+            if (tasks.length === 0) {
+                alert('No hay tarjetas pendientes para estudiar');
+                return;
+            }
+            
+            studyTasks = shuffle ? [...tasks].sort(() => Math.random() - 0.5) : [...tasks];
+            studyIndex = 0;
+            studyAnswered = false;
+            
+            document.getElementById('studyTitle').textContent = shuffle ? '📖 Estudio (aleatorio)' : '📖 Modo Estudio';
+            document.getElementById('studyModal').classList.add('active');
+            
+            renderStudyCard();
+        }
+
+        function renderStudyCard() {
+            const container = document.getElementById('studyContainer');
+            const task = studyTasks[studyIndex];
+            const total = studyTasks.length;
+            
+            document.getElementById('studyCounter').textContent = `${studyIndex + 1} / ${total}`;
+            document.getElementById('studyProgressFill').style.width = `${((studyIndex + 1) / total) * 100}%`;
+            
+            if (!task) {
+                // All done
+                container.innerHTML = `
+                    <div class="study-finish">
+                        <h2>🎉 ¡Terminaste!</h2>
+                        <p>Completaste las ${total} tarjetas</p>
+                        <button class="btn" onclick="closeStudyMode()">← Volver</button>
+                    </div>
+                `;
+                document.getElementById('studyProgressFill').style.width = '100%';
+                return;
+            }
+            
+            studyAnswered = false;
+            container.innerHTML = `
+                <div class="study-card">
+                    <div class="study-card-front">${escapeHtml(task.question)}</div>
+                    <div class="study-card-back" id="studyAnswer">${escapeHtml(task.answer)}</div>
+                    <div class="study-actions">
+                        <button class="btn" onclick="showStudyAnswer()">Mostrar Respuesta</button>
+                        <button class="btn study-shuffle" onclick="startStudyMode(true)">🔀 Aleatorio</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function showStudyAnswer() {
+            if (!studyAnswered) {
+                document.getElementById('studyAnswer').classList.add('visible');
+                studyAnswered = true;
+                // Replace button with next
+                document.querySelector('.study-actions').innerHTML = `
+                    <button class="btn" style="background:#00ff88;" onclick="nextStudyCard()">Siguiente →</button>
+                    <button class="btn study-shuffle" onclick="startStudyMode(true)">🔀 Aleatorio</button>
+                `;
+            }
+        }
+
+        function nextStudyCard() {
+            studyIndex++;
+            renderStudyCard();
+        }
+
+        function closeStudyMode() {
+            document.getElementById('studyModal').classList.remove('active');
+            renderTasks(); // Refresh to show any changes
+        }
+
+        // Add study button to task list actions
+        const originalRenderTasks = renderTasks;
         // ============== INIT ==============
         renderTasks();
     </script>
+
+    <!-- Study Mode Modal -->
+    <div class="study-modal" id="studyModal">
+        <div class="study-header">
+            <h2 id="studyTitle">📖 Modo Estudio</h2>
+            <button class="study-close" onclick="closeStudyMode()">✕</button>
+        </div>
+        <div class="study-progress">
+            <span class="study-counter" id="studyCounter">0 / 0</span>
+            <div class="study-progress-bar">
+                <div class="study-progress-fill" id="studyProgressFill" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="study-container" id="studyContainer">
+            <!-- Study card content loaded dynamically -->
+        </div>
+    </div>
 </body>
 </html>
