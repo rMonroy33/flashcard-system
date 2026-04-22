@@ -701,6 +701,15 @@
             <button class="btn" onclick="addTask()">➕ Agregar Tarjeta</button>
         </div>
         
+        <!-- Importar varias -->
+        <div class="add-card">
+            <h2>📥 Importar Varias Tarjetas</h2>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.75rem;">Formato: <strong>pregunta | respuesta | materia</strong> (una por línea)</p>
+            <textarea id="bulkInput" placeholder="¿Qué es un antibiótico? | Sustancia que mata o inhibe bacterias | Farmacología de Enfermería
+¿Para qué sirve la Amoxicilina? | Tratar infecciones bacterianas | Farmacología de Enfermería" style="min-height: 120px;"></textarea>
+            <button class="btn" onclick="importBulk()">📥 Importar Tarjetas</button>
+        </div>
+        
         <!-- Filtros -->
         <div class="filters">
             <button class="filter-btn active" onclick="filterTasks('all')">Todas</button>
@@ -819,6 +828,50 @@
                     tasks = Object.keys(data).map(key => ({ id: key, ...data[key] }));
                 } else {
                     tasks = [];
+                    // Add sample pharmacology cards
+                    const sampleCards = [
+                        // Mecanismos de acción y conceptos
+                        { question: "¿Qué es un antibiótico?", answer: "Sustancia que mata o inhibe el crecimiento de bacterias", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es el espectro antibacterial?", answer: "Rango de bacterias que un antibiótico puede eliminar", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la resistencia bacteriana?", answer: "Capacidad de las bacterias para sobrevivir despite antibiotics", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es el efecto post-antibiótico?", answer: "Supresión del crecimiento bacteriano después de Exposure al antibiótico", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la CIM (Concentración Inhibitoria Mínima)?", answer: "Menor concentración de antibiótico que inhibe el crecimiento bacteriano", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la CBM (Concentración Bactericida Mínima)?", answer: "Menor concentración que mata al 99.9% de las bacterias", subject: "Farmacología de Enfermería" },
+                        // Antimicrobiano
+                        { question: "¿Cuáles son los mecanismos de acción de los antibióticos?", answer: "Inhibición de síntesis de pared celular, proteína, ADN o ácido fólico", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la acción bactericida?", answer: "El antibiótico mata directamente a las bacterias", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la acción bacteriostática?", answer: "El antibiótico inhibe el crecimiento sin matar directamente", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué son los betalactámicos?", answer: "Antibióticos que inhiben la síntesis de pared celular (penicilinas, cefalosporinas)", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la ampicilina?", answer: "Penicilina de amplio espectro que cubre grampositivos y algunos gramnegativos", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la vancomicina?", answer: "Antibiótico de último recurso para MRSA y bacterias grampositivas resistentes", subject: "Farmacología de Enfermería" },
+                        // Antimicrobianos antiparasitarios
+                        { question: "¿Qué es un antiparasitario?", answer: "Medicamento que elimina o inhibe parásitos", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es el metronidazol?", answer: "Antiparasitario para amebiasis, giardiasis y tricomoniasis", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la ivermectina?", answer: "Antiparasitario de amplio espectro para nematodos y ácaros", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es el albendazol?", answer: "Antiparasitario para helmintos intestinales (lombrices)", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la cloroquina?", answer: "Antimalárico que actúa contra Plasmodium", subject: "Farmacología de Enfermería" },
+                        // Antimicóticos
+                        { question: "¿Qué es un antifúngico?", answer: "Medicamento que trata infecciones causadas por hongos", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es el fluconazol?", answer: "Antifúngico azol para candidiasis y criptococosis", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es el ketoconazol?", answer: "Antifúngico azol sistémico para infecciones por dermatofitos", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué son los polienos en antifúngicos?", answer: "Grupo de antifúngicos que incluyen nistatina y anfotericina B", subject: "Farmacología de Enfermería" },
+                        // Anfotericina B
+                        { question: "¿Qué es la Anfotericina B?", answer: "Antifúngico polieno de amplio espectro para infecciones fúngicas graves", subject: "Farmacología de Enfermería" },
+                        { question: "¿Cuál es el mecanismo de acción de la Anfotericina B?", answer: "Se une al ergosterol de la membrana fúngica causando permeabilidad y muerte celular", subject: "Farmacología de Enfermería" },
+                        { question: "¿Cuáles son los efectos adversos graves de la Anfotericina B?", answer: "Nefrotoxicidad, hipokalemia, fiebre, escalofríos y tromboflebitis", subject: "Farmacología de Enfermería" },
+                        { question: "¿Qué es la Anfotericina B liposomal?", answer: "Formulación que reduce nefrotoxicidad manteniendo eficacia antifúngica", subject: "Farmacología de Enfermería" },
+                        { question: "¿Para qué está indicada la Anfotericina B?", answer: "Criptococosis, histoplasmosis, blastomicosis, candidiasis sistémica", subject: "Farmacología de Enfermería" }
+                    ];
+                    
+                    for (const card of sampleCards) {
+                        tasks.push({
+                            id: generateId(),
+                            ...card,
+                            completed: false,
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+                    await saveTasksToFirebase();
                 }
                 
                 setSyncStatus('synced', 'Sincronizado');
@@ -875,6 +928,52 @@
             
             document.getElementById('questionInput').value = '';
             document.getElementById('answerInput').value = '';
+        }
+        
+        async function importBulk() {
+            const bulkInput = document.getElementById('bulkInput').value.trim();
+            if (!bulkInput) {
+                alert('Ingresa datos para importar');
+                return;
+            }
+            
+            const lines = bulkInput.split('\n').filter(l => l.trim());
+            let imported = 0;
+            let errors = [];
+            
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                const parts = line.split('|').map(p => p.trim());
+                
+                if (parts.length < 2) {
+                    errors.push(`Línea ${i + 1}: formato inválido (necesita pregunta | respuesta)`);
+                    continue;
+                }
+                
+                const question = parts[0];
+                const answer = parts[1];
+                const subject = parts[2] || 'General';
+                
+                tasks.push({
+                    id: generateId(),
+                    question,
+                    answer,
+                    subject,
+                    completed: false,
+                    createdAt: new Date().toISOString()
+                });
+                imported++;
+            }
+            
+            if (errors.length > 0) {
+                alert(`Importadas: ${imported}\n\nErrores:\n${errors.slice(0, 5).join('\n')}${errors.length > 5 ? '\n...' : ''}`);
+            } else {
+                alert(`¡${imported} tarjetas importadas!`);
+            }
+            
+            document.getElementById('bulkInput').value = '';
+            renderTasks();
+            await saveTasksToFirebase();
         }
         
         async function toggleTask(id) {
