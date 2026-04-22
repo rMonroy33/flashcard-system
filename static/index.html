@@ -277,11 +277,15 @@
             font-weight: 600;
         }
         
-        .task-tag.Matemáticas { background: linear-gradient(135deg, #fef3e8 0%, #fde4cc 100%); color: #c67d3d; }
-        .task-tag.Historia { background: linear-gradient(135deg, #f5ebe0 0%, #e8d8c8 100%); color: #8b6b4a; }
-        .task-tag.Ciencias { background: linear-gradient(135deg, #e8f4fc 0%, #c8e4f5 100%); color: #4a8db8; }
-        .task-tag.Idioma { background: linear-gradient(135deg, #f3eaf3 0%, #e4d4e8 100%); color: #7b5a8b; }
-        .task-tag.Programación { background: linear-gradient(135deg, #e8f0f4 0%, #c8dce4 100%); color: #4a6b7b; }
+        .task-tag.Enfermería { background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%); color: #c2185b; }
+        .task-tag.Anatomía { background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%); color: #0288d1; }
+        .task-tag.Farmacología { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #388e3c; }
+        .task-tag.Fisiología { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); color: #f57c00; }
+        .task-tag.Patología { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); color: #7b1fa2; }
+        .task-tag.Enfermería\20\20Comunitaria { background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%); color: #00838f; }
+        .task-tag.Enfermería\20\20Pediátrica { background: linear-gradient(135deg, #fff8e1 0%, #ffecb3 100%); color: #ff8f00; }
+        .task-tag.Enfermería\20\20Ginecológica { background: linear-gradient(135deg, #fce4ec 0%, #f48fb1 100%); color: #ad1457; }
+        .task-tag.Ética { background: linear-gradient(135deg, #efebe9 0%, #d7ccc8 100%); color: #5d4037; }
         
         .task-actions {
             display: flex;
@@ -688,13 +692,16 @@
             <input type="text" id="questionInput" placeholder="Pregunta o concepto...">
             <textarea id="answerInput" placeholder="Respuesta o definición..."></textarea>
             <select id="subjectInput">
+                <option value="Enfermería">Enfermería</option>
+                <option value="Anatomía">Anatomía</option>
+                <option value="Farmacología">Farmacología</option>
+                <option value="Fisiología">Fisiología</option>
+                <option value="Patología">Patología</option>
+                <option value="Enfermería Comunitaria">Enfermería Comunitaria</option>
+                <option value="Enfermería Pediátrica">Enfermería Pediátrica</option>
+                <option value="Enfermería Ginecológica">Enfermería Ginecológica</option>
+                <option value="Ética">Ética</option>
                 <option value="General">General</option>
-                <option value="Matemáticas">Matemáticas</option>
-                <option value="Historia">Historia</option>
-                <option value="Ciencias">Ciencias</option>
-                <option value="Idioma">Idioma</option>
-                <option value="Programación">Programación</option>
-                <option value="Otro">Otro</option>
             </select>
             <button class="btn" onclick="addTask()">➕ Agregar Tarjeta</button>
         </div>
@@ -704,6 +711,7 @@
             <button class="filter-btn active" onclick="filterTasks('all')">Todas</button>
             <button class="filter-btn" onclick="filterTasks('pending')">Por estudiar</button>
             <button class="filter-btn" onclick="filterTasks('completed')">Completadas</button>
+            <button class="filter-btn" onclick="filterTasks('subject')">Por Materia</button>
         </div>
         
         <!-- Lista -->
@@ -723,13 +731,16 @@
             <input type="text" id="editQuestion" placeholder="Pregunta o concepto...">
             <textarea id="editAnswer" placeholder="Respuesta o definición..."></textarea>
             <select id="editSubject">
+                <option value="Enfermería">Enfermería</option>
+                <option value="Anatomía">Anatomía</option>
+                <option value="Farmacología">Farmacología</option>
+                <option value="Fisiología">Fisiología</option>
+                <option value="Patología">Patología</option>
+                <option value="Enfermería Comunitaria">Enfermería Comunitaria</option>
+                <option value="Enfermería Pediátrica">Enfermería Pediátrica</option>
+                <option value="Enfermería Ginecológica">Enfermería Ginecológica</option>
+                <option value="Ética">Ética</option>
                 <option value="General">General</option>
-                <option value="Matemáticas">Matemáticas</option>
-                <option value="Historia">Historia</option>
-                <option value="Ciencias">Ciencias</option>
-                <option value="Idioma">Idioma</option>
-                <option value="Programación">Programación</option>
-                <option value="Otro">Otro</option>
             </select>
             <div class="modal-actions">
                 <button class="btn" onclick="saveEdit()">💾 Guardar</button>
@@ -917,7 +928,23 @@
         }
         
         function filterTasks(filter) {
-            currentFilter = filter;
+            if (filter === 'subject') {
+                const subjects = [...new Set(tasks.map(t => t.subject))].sort();
+                if (subjects.length === 0) {
+                    alert('No hay materias para filtrar');
+                    return;
+                }
+                const selected = prompt('Selecciona una materia:\n' + subjects.map((s, i) => `${i + 1}. ${s}`).join('\n') + '\n\nIngresa el número:');
+                if (!selected) return;
+                const index = parseInt(selected) - 1;
+                if (index >= 0 && index < subjects.length) {
+                    currentFilter = { type: 'subject', value: subjects[index] };
+                } else {
+                    return;
+                }
+            } else {
+                currentFilter = filter;
+            }
             
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -931,6 +958,7 @@
             if (currentFilter === 'all') return tasks;
             if (currentFilter === 'pending') return tasks.filter(t => !t.completed);
             if (currentFilter === 'completed') return tasks.filter(t => t.completed);
+            if (currentFilter.type === 'subject') return tasks.filter(t => t.subject === currentFilter.value);
             
             return tasks;
         }
