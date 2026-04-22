@@ -1,0 +1,18 @@
+# Environment variables
+.env
+
+# Flashcard data (generated locally)
+flashcards_data/
+
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

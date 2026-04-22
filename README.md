@@ -1,70 +1,97 @@
-# 📚 StudyCards - Gestor de Tareas de Estudio
+# 📚 StudyCards - Sistema de Flashcards
 
-Sistema simple de tarjetas de estudio (flashcards) en HTML + CSS + JS puro. Funciona como **PWA** (se instala en el celular como app) y los datos se guardan en **localStorage** del navegador.
+Dos versiones en un solo repo:
 
-## ✨ Características
+## 🌐 Versión Estática (GitHub Pages)
 
-- ✅ Agregar, editar y eliminar tarjetas
-- ✅ Marcar como completadas
-- ✅ Filtrar por estado (pendientes/completadas/materia)
-- ✅ Estadísticas (total, pendientes, completadas)
-- ✅ PWA - Se instala en el celular como app native
-- ✅ Funciona offline
-- ✅ Datos guardados en el navegador (localStorage)
-- ✅ Responsive - funciona en celular y desktop
+Para subir a GitHub Pages y acceder desde cualquier lugar.
 
-## 📱 Instalación en iOS/Android
+**Archivos:** `static/` (index.html, sw.js, manifest.json)
 
-1. Abrir en Safari (iOS) o Chrome (Android)
-2. Ir a la URL de GitHub Pages
-3. **iOS:** Compartir → Añadir a pantalla de inicio
-4. **Android:** Menú → Instalar app
+**Deploy:**
+1. Subir carpeta `static/` a GitHub
+2. Settings → Pages → Source: main
+3. Esperar ~2 min
 
-## 🚀 Deploy a GitHub Pages
+**Instalar como app:**
+- iOS: Safari → Compartir → Añadir a pantalla de inicio
+- Android: Chrome → Menú → Instalar app
 
-1. Crear repositorio nuevo en GitHub
-2. Subir los archivos de la carpeta `static/`:
-   - `index.html`
-   - `sw.js`
-   - `manifest.json`
-3. Ir a **Settings → Pages**
-4. En "Source" seleccionar `main` y guardar
-5. Esperar ~2 minutos
-6. ¡Listo! Tu app estará en: `https://tu-usuario.github.io/repo-name/`
-
-## 🛠️ Desarrollo local
-
-Simplemente abrir `static/index.html` en el navegador.
-
-O usar un servidor local:
-```bash
-cd flashcard-system
-python3 -m http.server 8080
-# Abrir http://localhost:8080/static/index.html
-```
-
-## 📁 Estructura
-
-```
-flashcard-system/
-├── server.py          # Servidor con procesamiento AI (versión completa)
-├── static/            # Archivos para GitHub Pages (esta versión simple)
-│   ├── index.html     # App principal
-│   ├── sw.js          # Service Worker (PWA)
-│   └── manifest.json   # Config PWA
-└── README.md          # Este archivo
-```
-
-## ⚙️ Configuración
-
-No necesita ninguna configuración. Todo se guarda en localStorage del navegador.
-
-Si querés cambiar materias, editá el `<select id="subjectInput">` en el HTML.
-
-## 🔒 Privacidad
-
-Los datos **nunca** salen de tu navegador. Todo se almacena en localStorage. Ni yo ni GitHub tienen acceso a tus tareas.
+⚠️ **Limitación:** Sin backend, las tarjetas se crean a mano y se guardan en localStorage.
 
 ---
 
-¿Querés la versión completa con IA? Volvé a la versión `server.py` que usa MiniMax para generar flashcards automáticamente desde documentos PDF/DOCX.
+## ⚡ Versión Completa con IA (Local)
+
+Tiene procesamiento automático de documentos (PDF, DOCX, TXT) usando la API de MiniMax para generar flashcards.
+
+### Archivos
+
+```
+flashcard-system/
+├── server.py          # Servidor FastAPI (este corrés)
+├── requirements.txt  # Dependencias
+├── .env.example      # Configuración de ejemplo
+└── flashcards_data/  # (creado automático) albums de flashcards
+```
+
+### Instalación
+
+```bash
+# 1. Instalar dependencias
+pip install --user --break-system-packages -r requirements.txt
+
+# 2. Configurar API key de MiniMax
+cp .env.example .env
+# Editar .env y poner tu MINIMAX_API_KEY
+
+# 3. Arrancar
+python3 server.py
+```
+
+### Uso
+
+1. Abrir http://localhost:8080
+2. Subir un PDF, DOCX o TXT
+3. El sistema genera flashcards automáticamente
+4. Estudiar desde la web
+
+### Acceso remoto (para otra persona)
+
+**Opción A: ngrok (temporal)**
+```bash
+ngrok http 8080
+# Te da una URL para compartir
+```
+
+**Opción B: Deploy a Railway (permanente)**
+```bash
+# Crear repo en GitHub
+# Conectar a Railway (railway.app)
+# Deploy automático
+# URL fija para compartir
+```
+
+### API Endpoints
+
+- `GET /` - Interfaz web
+- `POST /upload` - Subir documento y generar flashcards
+- `GET /api/decks` - Listar todos los mazos
+- `GET /api/decks/{id}/export` - Exportar deck en JSON
+- `GET /deck/{id}` - Ver deck específico
+
+---
+
+## 📱 PWA
+
+Ambas versiones soportan PWA:
+- Funcionan offline
+- Se instalan en el celular como app native
+- Datos guardados localmente
+
+---
+
+## 🔒 Privacidad
+
+- Versión estática: datos solo en localStorage del navegador
+- Versión IA: datos en el servidor local, API key necesaria
