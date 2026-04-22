@@ -3,22 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📚 StudyCards - Gestor de Tareas</title>
+    <title>📖 FlashMed - Tarjetas de Estudio</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         :root {
-            --bg: #0f0f1a;
-            --card: #1a1a2e;
-            --accent: #00d9ff;
-            --accent2: #ff6b6b;
-            --text: #eee;
-            --text-muted: #888;
+            --bg: #fdf6f0;
+            --card: #ffffff;
+            --card-shadow: rgba(180, 100, 120, 0.1);
+            --accent: #e8a0b4;
+            --accent-dark: #d4809a;
+            --accent-gold: #c9a86c;
+            --accent-mint: #7ec8a3;
+            --accent-lavender: #b4a7d6;
+            --text: #4a3f44;
+            --text-muted: #8a7f85;
+            --gradient-rose: linear-gradient(135deg, #f8e1e7 0%, #fdf6f0 100%);
+            --gradient-gold: linear-gradient(135deg, #f5e6d3 0%, #c9a86c 100%);
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--bg);
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--gradient-rose);
             color: var(--text);
             min-height: 100vh;
             padding: 1rem;
@@ -31,45 +37,61 @@
         
         h1 {
             text-align: center;
-            color: var(--accent);
-            margin-bottom: 0.5rem;
-            font-size: 2rem;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.25rem;
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
         
         .subtitle {
             text-align: center;
             color: var(--text-muted);
-            margin-bottom: 2rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+        }
+        
+        /* Decorative heart icon */
+        .heart-decoration {
+            color: var(--accent);
         }
         
         /* Formulario para agregar */
         .add-card {
             background: var(--card);
-            border-radius: 12px;
+            border-radius: 20px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
+            box-shadow: 0 4px 20px var(--card-shadow);
+            border: 1px solid rgba(232, 160, 180, 0.2);
         }
         
         .add-card h2 {
             font-size: 1rem;
-            color: var(--accent);
+            color: var(--accent-dark);
             margin-bottom: 1rem;
+            font-weight: 700;
         }
         
         input, textarea, select {
             width: 100%;
-            background: #16213e;
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 0.75rem;
+            background: #fef9f5;
+            border: 2px solid #f0e6e0;
+            border-radius: 12px;
+            padding: 0.85rem;
             color: var(--text);
             font-size: 1rem;
             margin-bottom: 0.75rem;
+            transition: all 0.3s;
         }
         
         input:focus, textarea:focus, select:focus {
             outline: none;
             border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(232, 160, 180, 0.2);
         }
         
         textarea {
@@ -82,54 +104,63 @@
         }
         
         .btn {
-            background: var(--accent);
-            color: var(--bg);
+            background: var(--gradient-gold);
+            color: #5a4a3a;
             border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
+            padding: 0.85rem 1.5rem;
+            border-radius: 12px;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1rem;
             width: 100%;
-            transition: transform 0.1s;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(201, 168, 108, 0.3);
         }
         
         .btn:hover {
-            transform: scale(1.02);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(201, 168, 108, 0.4);
         }
         
         .btn:active {
-            transform: scale(0.98);
+            transform: translateY(0);
         }
         
         .btn-delete {
-            background: var(--accent2);
+            background: linear-gradient(135deg, #ffb4b4 0%, #ff8a8a 100%);
+            color: #fff;
         }
         
         /* Stats */
         .stats {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             margin-bottom: 1.5rem;
         }
         
         .stat {
             background: var(--card);
-            padding: 1rem;
-            border-radius: 12px;
+            padding: 1rem 0.5rem;
+            border-radius: 16px;
             flex: 1;
             text-align: center;
+            box-shadow: 0 4px 16px var(--card-shadow);
+            border: 1px solid rgba(232, 160, 180, 0.15);
         }
         
         .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--accent);
+            font-size: 1.6rem;
+            font-weight: 800;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .stat-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
+            font-weight: 600;
         }
         
         /* Filtros */
@@ -143,47 +174,62 @@
         .filter-btn {
             background: var(--card);
             color: var(--text-muted);
-            border: none;
+            border: 1px solid #f0e6e0;
             padding: 0.5rem 1rem;
             border-radius: 20px;
             cursor: pointer;
             font-size: 0.85rem;
+            font-weight: 600;
             transition: all 0.2s;
         }
         
         .filter-btn.active {
-            background: var(--accent);
-            color: var(--bg);
+            background: var(--accent-dark);
+            color: #fff;
+            border-color: var(--accent-dark);
+        }
+        
+        .filter-btn:hover:not(.active) {
+            border-color: var(--accent);
+            color: var(--accent-dark);
         }
         
         /* Lista de tareas */
         .task-list {
             display: flex;
             flex-direction: column;
-            gap: 0.75rem;
+            gap: 0.85rem;
         }
         
         .task {
             background: var(--card);
-            border-radius: 12px;
-            padding: 1rem;
+            border-radius: 16px;
+            padding: 1.1rem;
             display: flex;
-            gap: 0.75rem;
+            gap: 0.85rem;
             align-items: flex-start;
             transition: all 0.3s;
+            box-shadow: 0 4px 16px var(--card-shadow);
+            border: 1px solid rgba(232, 160, 180, 0.1);
+        }
+        
+        .task:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--card-shadow);
         }
         
         .task.completed {
-            opacity: 0.5;
+            opacity: 0.6;
         }
         
         .task.completed .task-question {
             text-decoration: line-through;
+            color: var(--text-muted);
         }
         
         .task-checkbox {
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border-radius: 50%;
             border: 2px solid var(--accent);
             cursor: pointer;
@@ -193,11 +239,13 @@
             flex-shrink: 0;
             font-size: 14px;
             transition: all 0.2s;
+            background: transparent;
         }
         
         .task.completed .task-checkbox {
             background: var(--accent);
-            color: var(--bg);
+            color: #fff;
+            border-color: var(--accent);
         }
         
         .task-content {
@@ -205,34 +253,43 @@
         }
         
         .task-question {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
+            font-weight: 700;
+            margin-bottom: 0.3rem;
+            color: var(--text);
         }
         
         .task-answer {
             color: var(--text-muted);
             font-size: 0.9rem;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.3rem;
+            line-height: 1.4;
         }
         
         .task-meta {
             display: flex;
-            gap: 0.5rem;
+            gap: 0.4rem;
             flex-wrap: wrap;
         }
         
         .task-tag {
-            background: #16213e;
-            color: var(--accent);
-            padding: 0.15rem 0.5rem;
-            border-radius: 4px;
+            background: linear-gradient(135deg, #f8e1e7 0%, #f0d4db 100%);
+            color: var(--accent-dark);
+            padding: 0.2rem 0.6rem;
+            border-radius: 8px;
             font-size: 0.75rem;
+            font-weight: 600;
         }
+        
+        .task-tag.anatomia { background: linear-gradient(135deg, #e1f5fe 0%, #b3e5fc 100%); color: #0288d1; }
+        .task-tag.farmacologia { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #388e3c; }
+        .task-tag.enfermeria { background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%); color: #c2185b; }
+        .task-tag.fisiologia { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); color: #f57c00; }
+        .task-tag.patologia { background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%); color: #7b1fa2; }
         
         .task-actions {
             display: flex;
             flex-direction: column;
-            gap: 0.25rem;
+            gap: 0.2rem;
         }
         
         .task-btn {
@@ -240,20 +297,26 @@
             border: none;
             color: var(--text-muted);
             cursor: pointer;
-            font-size: 1rem;
-            padding: 0.25rem;
-            transition: color 0.2s;
+            font-size: 1.1rem;
+            padding: 0.3rem;
+            transition: all 0.2s;
         }
         
         .task-btn:hover {
-            color: var(--accent2);
+            color: var(--accent-dark);
+            transform: scale(1.1);
         }
         
         /* Empty state */
         .empty {
             text-align: center;
             color: var(--text-muted);
-            padding: 2rem;
+            padding: 3rem 1rem;
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
         }
         
         /* Modal de edición */
@@ -264,7 +327,8 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.8);
+            background: rgba(74, 63, 68, 0.6);
+            backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
@@ -277,59 +341,41 @@
         
         .modal-content {
             background: var(--card);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 20px;
+            padding: 1.75rem;
             width: 100%;
-            max-width: 500px;
+            max-width: 480px;
+            box-shadow: 0 20px 60px rgba(74, 63, 68, 0.3);
         }
         
         .modal h2 {
-            color: var(--accent);
-            margin-bottom: 1rem;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.25rem;
+            font-size: 1.4rem;
         }
         
         .modal-actions {
             display: flex;
-            gap: 0.5rem;
-            margin-top: 1rem;
+            gap: 0.75rem;
+            margin-top: 1.25rem;
         }
         
         .modal-actions .btn {
             flex: 1;
         }
         
-        /* PWA Install prompt */
-        .install-prompt {
-            background: var(--accent);
-            color: var(--bg);
-            padding: 1rem;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .install-prompt.show {
-            display: flex;
-        }
-        
-        .install-prompt button {
-            background: var(--bg);
-            color: var(--accent);
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 8px;
-            cursor: pointer;
-        }
-        
         /* Instructions */
         .instructions {
             background: var(--card);
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 1rem;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             text-align: center;
+            box-shadow: 0 4px 16px var(--card-shadow);
+            border: 1px solid rgba(232, 160, 180, 0.15);
         }
         
         .instructions p {
@@ -338,16 +384,18 @@
         }
         
         .instructions strong {
-            color: var(--accent);
-        }
-
-        /* Study Mode */
-        .study-btn {
-            background: #00ff88;
-            color: #1a1a2e;
-            margin-top: 0.5rem;
+            color: var(--accent-dark);
         }
         
+        /* Study Button */
+        .study-btn {
+            background: linear-gradient(135deg, #7ec8a3 0%, #5db382 100%);
+            color: #fff;
+            margin-top: 0.75rem;
+            box-shadow: 0 4px 12px rgba(126, 200, 163, 0.3);
+        }
+        
+        /* Study Mode */
         .study-modal {
             display: none;
             position: fixed;
@@ -355,7 +403,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: var(--bg);
+            background: var(--gradient-rose);
             z-index: 2000;
             flex-direction: column;
         }
@@ -366,15 +414,17 @@
         
         .study-header {
             background: var(--card);
-            padding: 1rem 1.5rem;
+            padding: 1.25rem 1.5rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            box-shadow: 0 2px 16px var(--card-shadow);
         }
         
         .study-header h2 {
-            color: var(--accent);
-            font-size: 1.1rem;
+            color: var(--accent-dark);
+            font-size: 1.2rem;
+            font-weight: 700;
         }
         
         .study-close {
@@ -384,37 +434,41 @@
             font-size: 1.5rem;
             cursor: pointer;
             padding: 0.5rem;
+            transition: color 0.2s;
         }
         
         .study-close:hover {
-            color: var(--accent2);
+            color: var(--accent-dark);
         }
         
         .study-progress {
             background: var(--card);
-            padding: 0.5rem 1.5rem;
+            padding: 0.75rem 1.5rem;
             display: flex;
             align-items: center;
             gap: 1rem;
+            box-shadow: 0 2px 8px var(--card-shadow);
         }
         
         .study-progress-bar {
             flex: 1;
-            height: 4px;
-            background: #333;
-            border-radius: 2px;
+            height: 6px;
+            background: #f0e6e0;
+            border-radius: 3px;
             overflow: hidden;
         }
         
         .study-progress-fill {
             height: 100%;
-            background: var(--accent);
-            transition: width 0.3s;
+            background: var(--gradient-gold);
+            transition: width 0.4s ease;
+            border-radius: 3px;
         }
         
         .study-counter {
             color: var(--text-muted);
             font-size: 0.9rem;
+            font-weight: 600;
             white-space: nowrap;
         }
         
@@ -423,64 +477,166 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: 1.5rem;
+        }
+        
+        /* Study Card - Flip Effect */
+        .study-card-wrapper {
+            perspective: 1000px;
+            width: 100%;
+            max-width: 480px;
         }
         
         .study-card {
             background: var(--card);
-            border-radius: 16px;
-            padding: 2rem;
-            max-width: 500px;
+            border-radius: 24px;
+            padding: 0;
             width: 100%;
-            text-align: center;
+            min-height: 320px;
+            box-shadow: 0 12px 40px var(--card-shadow);
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(232, 160, 180, 0.2);
+        }
+        
+        .study-card.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .study-card-front,
+        .study-card-back {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            backface-visibility: hidden;
+            border-radius: 24px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
         
         .study-card-front {
-            font-size: 1.3rem;
-            color: var(--accent);
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
+            background: var(--card);
         }
         
         .study-card-back {
-            background: #0f3460;
-            padding: 1.5rem;
-            border-radius: 12px;
-            color: #ccc;
-            display: none;
-            margin-bottom: 1.5rem;
-            line-height: 1.5;
+            background: linear-gradient(145deg, #fef9f5 0%, #f8e8ec 100%);
+            transform: rotateY(180deg);
+            border: 2px solid var(--accent);
         }
         
-        .study-card-back.visible {
-            display: block;
+        .study-card-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+        }
+        
+        .study-card-front .study-card-label {
+            color: var(--accent-dark);
+        }
+        
+        .study-card-back .study-card-label {
+            color: var(--accent-dark);
+        }
+        
+        .study-card-question {
+            font-size: 1.4rem;
+            color: var(--text);
+            text-align: center;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+        
+        .study-card-answer {
+            font-size: 1.15rem;
+            color: var(--text);
+            text-align: center;
+            line-height: 1.6;
+        }
+        
+        .study-card-divider {
+            width: 60px;
+            height: 3px;
+            background: var(--gradient-gold);
+            border-radius: 2px;
+            margin: 1.5rem 0;
+        }
+        
+        .study-card-tag {
+            position: absolute;
+            bottom: 1.25rem;
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd9 100%);
+            color: var(--accent-dark);
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
         
         .study-actions {
             display: flex;
-            gap: 1rem;
+            gap: 0.75rem;
             justify-content: center;
             flex-wrap: wrap;
+            margin-top: 1.5rem;
+            width: 100%;
+            max-width: 480px;
         }
         
         .study-actions .btn {
             width: auto;
-            min-width: 140px;
+            min-width: 150px;
+            flex: 1;
+        }
+        
+        .study-btn-show {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(232, 160, 180, 0.4);
+        }
+        
+        .study-btn-next {
+            background: linear-gradient(135deg, #7ec8a3 0%, #5db382 100%);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(126, 200, 163, 0.4);
+        }
+        
+        .study-btn-shuffle {
+            background: linear-gradient(135deg, var(--accent-lavender) 0%, #9580c2 100%);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(180, 167, 214, 0.4);
         }
         
         .study-finish {
             text-align: center;
+            padding: 2rem;
+        }
+        
+        .study-finish-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
         }
         
         .study-finish h2 {
-            color: #00ff88;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             font-size: 1.8rem;
-            margin-bottom: 1rem;
+            margin-bottom: 0.75rem;
         }
         
         .study-finish p {
             color: var(--text-muted);
             margin-bottom: 1.5rem;
+            font-size: 1.1rem;
         }
         
         .study-empty {
@@ -489,33 +645,36 @@
             padding: 3rem;
         }
         
-        .study-shuffle {
-            background: #9b59b6;
+        .study-launch-btn {
+            background: linear-gradient(135deg, #7ec8a3 0%, #5db382 100%) !important;
+            color: #fff !important;
+            box-shadow: 0 4px 16px rgba(126, 200, 163, 0.3) !important;
         }
         
-        .study-shuffle:hover {
-            background: #8e44ad;
+        /* Tap hint */
+        .tap-hint {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            opacity: 0.8;
         }
-
-        .study-btn-small {
-            color: #00ff88 !important;
-        }
+        
+        /* Subject-specific colors */
+        .subject-Anatomía .study-card-front { border-top: 4px solid #0288d1; }
+        .subject-Farmacología .study-card-front { border-top: 4px solid #388e3c; }
+        .subject-Enfermería .study-card-front { border-top: 4px solid #c2185b; }
+        .subject-Fisiología .study-card-front { border-top: 4px solid #f57c00; }
+        .subject-Patología .study-card-front { border-top: 4px solid #7b1fa2; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>📚 StudyCards</h1>
-        <p class="subtitle">Gestor de tareas de estudio</p>
-        
-        <!-- PWA Install -->
-        <div class="install-prompt" id="installPrompt">
-            <span>📱 Instalá la app en tu celular</span>
-            <button id="installBtn">Instalar</button>
-        </div>
+        <h1>📖 FlashMed</h1>
+        <p class="subtitle">Tarjetas de estudio para enfermería <span class="heart-decoration">💕</span></p>
         
         <!-- Instrucciones -->
         <div class="instructions">
-            <p>💾 Los datos se guardan en tu navegador</p>
+            <p>💾 Los datos se guardan en tu navegador · ✨ Toca una tarjeta para marcar</p>
         </div>
         
         <!-- Stats -->
@@ -526,7 +685,7 @@
             </div>
             <div class="stat">
                 <div class="stat-value" id="pendingCount">0</div>
-                <div class="stat-label">Pendientes</div>
+                <div class="stat-label">Por estudiar</div>
             </div>
             <div class="stat">
                 <div class="stat-value" id="completedCount">0</div>
@@ -536,32 +695,33 @@
         
         <!-- Agregar tarea -->
         <div class="add-card">
-            <h2>➕ Nueva Tarjeta</h2>
-            <input type="text" id="questionInput" placeholder="Pregunta o título">
-            <textarea id="answerInput" placeholder="Respuesta o descripción"></textarea>
+            <h2>✨ Nueva Tarjeta</h2>
+            <input type="text" id="questionInput" placeholder="Pregunta o concepto...">
+            <textarea id="answerInput" placeholder="Respuesta o definición..."></textarea>
             <select id="subjectInput">
+                <option value="Enfermería">Enfermería</option>
+                <option value="Anatomía">Anatomía</option>
+                <option value="Farmacología">Farmacología</option>
+                <option value="Fisiología">Fisiología</option>
+                <option value="Patología">Patología</option>
                 <option value="General">General</option>
-                <option value="Matemáticas">Matemáticas</option>
-                <option value="Historia">Historia</option>
-                <option value="Ciencias">Ciencias</option>
-                <option value="Idioma">Idioma</option>
-                <option value="Programación">Programación</option>
-                <option value="Otro">Otro</option>
             </select>
-            <button class="btn" onclick="addTask()">✅ Agregar Tarjeta</button>
+            <button class="btn" onclick="addTask()">💕 Agregar Tarjeta</button>
         </div>
         
         <!-- Filtros -->
         <div class="filters">
             <button class="filter-btn active" onclick="filterTasks('all')">Todas</button>
-            <button class="filter-btn" onclick="filterTasks('pending')">Pendientes</button>
+            <button class="filter-btn" onclick="filterTasks('pending')">Por estudiar</button>
             <button class="filter-btn" onclick="filterTasks('completed')">Completadas</button>
-            <button class="filter-btn" onclick="filterTasks('subject')">Por Materia</button>
         </div>
         
         <!-- Lista -->
         <div class="task-list" id="taskList">
-            <div class="empty">No hay tarjetas aún. ¡Agregá una!</div>
+            <div class="empty">
+                <div class="empty-icon">📋</div>
+                <p>No hay tarjetas aún.<br>¡Agrega tu primera tarjeta!</p>
+            </div>
         </div>
     </div>
     
@@ -570,27 +730,26 @@
         <div class="modal-content">
             <h2>✏️ Editar Tarjeta</h2>
             <input type="hidden" id="editId">
-            <input type="text" id="editQuestion" placeholder="Pregunta o título">
-            <textarea id="editAnswer" placeholder="Respuesta o descripción"></textarea>
+            <input type="text" id="editQuestion" placeholder="Pregunta o concepto...">
+            <textarea id="editAnswer" placeholder="Respuesta o definición..."></textarea>
             <select id="editSubject">
+                <option value="Enfermería">Enfermería</option>
+                <option value="Anatomía">Anatomía</option>
+                <option value="Farmacología">Farmacología</option>
+                <option value="Fisiología">Fisiología</option>
+                <option value="Patología">Patología</option>
                 <option value="General">General</option>
-                <option value="Matemáticas">Matemáticas</option>
-                <option value="Historia">Historia</option>
-                <option value="Ciencias">Ciencias</option>
-                <option value="Idioma">Idioma</option>
-                <option value="Programación">Programación</option>
-                <option value="Otro">Otro</option>
             </select>
             <div class="modal-actions">
                 <button class="btn" onclick="saveEdit()">💾 Guardar</button>
-                <button class="btn btn-delete" onclick="closeModal()">❌ Cancelar</button>
+                <button class="btn btn-delete" onclick="closeModal()">✕</button>
             </div>
         </div>
     </div>
 
     <script>
         // ============== DATA MANAGEMENT ==============
-        const STORAGE_KEY = 'studycards_data';
+        const STORAGE_KEY = 'flashmed_data';
         
         function loadTasks() {
             const data = localStorage.getItem(STORAGE_KEY);
@@ -614,7 +773,7 @@
             const subject = document.getElementById('subjectInput').value;
             
             if (!question) {
-                alert('Por favor ingresa una pregunta o título');
+                alert('Por favor ingresa una pregunta');
                 return;
             }
             
@@ -630,7 +789,6 @@
             
             saveTasks(tasks);
             
-            // Clear form
             document.getElementById('questionInput').value = '';
             document.getElementById('answerInput').value = '';
             
@@ -689,20 +847,10 @@
         function filterTasks(filter) {
             currentFilter = filter;
             
-            // Update buttons
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
-                if (btn.textContent.toLowerCase().includes(filter === 'all' ? 'todas' : filter === 'pending' ? 'pendientes' : filter === 'completed' ? 'completadas' : 'materia')) {
-                    btn.classList.add('active');
-                }
             });
-            
-            // Handle subject filter separately
-            if (filter === 'subject') {
-                const subjects = [...new Set(loadTasks().map(t => t.subject))];
-                const subject = prompt('Selecciona materia:\n' + subjects.join('\n'));
-                currentFilter = { type: 'subject', value: subject };
-            }
+            event.target.classList.add('active');
             
             renderTasks();
         }
@@ -713,31 +861,42 @@
             if (currentFilter === 'all') return tasks;
             if (currentFilter === 'pending') return tasks.filter(t => !t.completed);
             if (currentFilter === 'completed') return tasks.filter(t => t.completed);
-            if (currentFilter.type === 'subject') return tasks.filter(t => t.subject === currentFilter.value);
             
             return tasks;
         }
         
         // ============== RENDER ==============
+        function getTagClass(subject) {
+            const map = {
+                'Anatomía': 'anatomia',
+                'Farmacología': 'farmacologia',
+                'Enfermería': 'enfermeria',
+                'Fisiología': 'fisiologia',
+                'Patología': 'patologia'
+            };
+            return map[subject] || '';
+        }
+        
         function renderTasks() {
             const tasks = getFilteredTasks();
             const allTasks = loadTasks();
             const taskList = document.getElementById('taskList');
             
-            // Update stats
             document.getElementById('totalCount').textContent = allTasks.length;
             document.getElementById('pendingCount').textContent = allTasks.filter(t => !t.completed).length;
             document.getElementById('completedCount').textContent = allTasks.filter(t => t.completed).length;
             
             if (tasks.length === 0) {
-                taskList.innerHTML = '<div class="empty">No hay tarjetas para mostrar</div>';
+                taskList.innerHTML = `
+                    <div class="empty">
+                        <div class="empty-icon">📋</div>
+                        <p>${currentFilter === 'all' ? 'No hay tarjetas aún.<br>¡Agrega tu primera tarjeta!' : 'No hay tarjetas en esta categoría'}</p>
+                    </div>
+                `;
                 return;
             }
             
             const pendingCount = allTasks.filter(t => !t.completed).length;
-            const studyBtn = pendingCount > 0 
-                ? `<button class="task-btn study-btn-small" onclick="event.stopPropagation(); startStudyMode()" title="Estudiar">📖</button>` 
-                : '';
             
             taskList.innerHTML = tasks.map(task => `
                 <div class="task ${task.completed ? 'completed' : ''}">
@@ -748,18 +907,17 @@
                         <div class="task-question">${escapeHtml(task.question)}</div>
                         ${task.answer ? `<div class="task-answer">${escapeHtml(task.answer)}</div>` : ''}
                         <div class="task-meta">
-                            <span class="task-tag">${task.subject}</span>
+                            <span class="task-tag ${getTagClass(task.subject)}">${task.subject}</span>
                         </div>
                     </div>
                     <div class="task-actions">
-                        ${studyBtn}
                         <button class="task-btn" onclick="openEditModal('${task.id}')" title="Editar">✏️</button>
                         <button class="task-btn" onclick="deleteTask('${task.id}')" title="Eliminar">🗑️</button>
                     </div>
                 </div>
             `).join('');
             
-            // Add global study button if there are pending tasks
+            // Study launch button
             const existingStudyBtn = document.querySelector('.study-launch-btn');
             if (existingStudyBtn) existingStudyBtn.remove();
             
@@ -767,7 +925,6 @@
                 const statsDiv = document.querySelector('.stats');
                 const studyLaunchBtn = document.createElement('button');
                 studyLaunchBtn.className = 'btn study-launch-btn';
-                studyLaunchBtn.style.cssText = 'margin-top:1rem; background:#00ff88; color:#1a1a2e;';
                 studyLaunchBtn.textContent = `📖 Estudiar ${pendingCount} tarjetas`;
                 studyLaunchBtn.onclick = () => startStudyMode();
                 statsDiv.parentNode.insertBefore(studyLaunchBtn, statsDiv.nextSibling);
@@ -780,65 +937,38 @@
             return div.innerHTML;
         }
         
-        // ============== PWA ==============
-        let deferredPrompt;
-        
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            document.getElementById('installPrompt').classList.add('show');
-        });
-        
-        document.getElementById('installBtn').addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                document.getElementById('installPrompt').classList.remove('show');
-            }
-        });
-        
-        // Service Worker for offline support
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js').catch(() => {});
-        }
-        
         // ============== KEYBOARD SHORTCUTS ==============
         document.addEventListener('keydown', (e) => {
-            // Enter to submit if in input fields
             if (e.key === 'Enter' && !e.shiftKey) {
                 const active = document.activeElement;
                 if (active.id === 'questionInput' || active.id === 'answerInput') {
                     addTask();
                 }
             }
-            
-            // Escape to close modal
             if (e.key === 'Escape') {
                 closeModal();
+                closeStudyMode();
             }
         });
         
-
-
         // ============== STUDY MODE ==============
         let studyTasks = [];
         let studyIndex = 0;
-        let studyAnswered = false;
+        let isFlipped = false;
 
         function startStudyMode(shuffle = false) {
             const tasks = loadTasks().filter(t => !t.completed);
             
             if (tasks.length === 0) {
-                alert('No hay tarjetas pendientes para estudiar');
+                alert('No hay tarjetas para estudiar');
                 return;
             }
             
             studyTasks = shuffle ? [...tasks].sort(() => Math.random() - 0.5) : [...tasks];
             studyIndex = 0;
-            studyAnswered = false;
+            isFlipped = false;
             
-            document.getElementById('studyTitle').textContent = shuffle ? '📖 Estudio (aleatorio)' : '📖 Modo Estudio';
+            document.getElementById('studyTitle').textContent = shuffle ? '🔀 Estudio Aleatorio' : '📖 Modo Estudio';
             document.getElementById('studyModal').classList.add('active');
             
             renderStudyCard();
@@ -853,10 +983,10 @@
             document.getElementById('studyProgressFill').style.width = `${((studyIndex + 1) / total) * 100}%`;
             
             if (!task) {
-                // All done
                 container.innerHTML = `
                     <div class="study-finish">
-                        <h2>🎉 ¡Terminaste!</h2>
+                        <div class="study-finish-icon">🎉</div>
+                        <h2>¡Terminaste!</h2>
                         <p>Completaste las ${total} tarjetas</p>
                         <button class="btn" onclick="closeStudyMode()">← Volver</button>
                     </div>
@@ -865,43 +995,48 @@
                 return;
             }
             
-            studyAnswered = false;
+            isFlipped = false;
+            
             container.innerHTML = `
-                <div class="study-card">
-                    <div class="study-card-front">${escapeHtml(task.question)}</div>
-                    <div class="study-card-back" id="studyAnswer">${escapeHtml(task.answer)}</div>
-                    <div class="study-actions">
-                        <button class="btn" onclick="showStudyAnswer()">Mostrar Respuesta</button>
-                        <button class="btn study-shuffle" onclick="startStudyMode(true)">🔀 Aleatorio</button>
+                <div class="study-card-wrapper">
+                    <div class="study-card subject-${task.subject}" id="studyCard" onclick="flipCard()">
+                        <div class="study-card-front">
+                            <span class="study-card-label">Pregunta</span>
+                            <div class="study-card-question">${escapeHtml(task.question)}</div>
+                            <div class="tap-hint">✨ Toca para ver la respuesta</div>
+                        </div>
+                        <div class="study-card-back">
+                            <span class="study-card-label">Respuesta</span>
+                            <div class="study-card-answer">${escapeHtml(task.answer)}</div>
+                            <div class="study-card-divider"></div>
+                        </div>
                     </div>
+                </div>
+                <div class="study-actions">
+                    <button class="btn study-btn-next" onclick="event.stopPropagation(); nextCard()">Siguiente →</button>
+                    <button class="btn study-btn-shuffle" onclick="event.stopPropagation(); startStudyMode(true)">🔀 Aleatorio</button>
                 </div>
             `;
         }
-
-        function showStudyAnswer() {
-            if (!studyAnswered) {
-                document.getElementById('studyAnswer').classList.add('visible');
-                studyAnswered = true;
-                // Replace button with next
-                document.querySelector('.study-actions').innerHTML = `
-                    <button class="btn" style="background:#00ff88;" onclick="nextStudyCard()">Siguiente →</button>
-                    <button class="btn study-shuffle" onclick="startStudyMode(true)">🔀 Aleatorio</button>
-                `;
+        
+        function flipCard() {
+            const card = document.getElementById('studyCard');
+            if (card) {
+                isFlipped = !isFlipped;
+                card.classList.toggle('flipped', isFlipped);
             }
         }
-
-        function nextStudyCard() {
+        
+        function nextCard() {
             studyIndex++;
             renderStudyCard();
         }
 
         function closeStudyMode() {
             document.getElementById('studyModal').classList.remove('active');
-            renderTasks(); // Refresh to show any changes
+            renderTasks();
         }
 
-        // Add study button to task list actions
-        const originalRenderTasks = renderTasks;
         // ============== INIT ==============
         renderTasks();
     </script>
@@ -919,7 +1054,6 @@
             </div>
         </div>
         <div class="study-container" id="studyContainer">
-            <!-- Study card content loaded dynamically -->
         </div>
     </div>
 </body>
