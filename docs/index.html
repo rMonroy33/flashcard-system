@@ -1178,18 +1178,29 @@
         let isFlipped = false;
 
         function startStudyMode(shuffle = false) {
-            const pending = tasks.filter(t => !t.completed);
+            let studySource = tasks.filter(t => !t.completed);
             
-            if (pending.length === 0) {
+            // Si hay filtro por materia activo, solo estudiar esa materia
+            if (currentFilter && currentFilter.type === 'subject') {
+                studySource = studySource.filter(t => t.subject === currentFilter.value);
+            }
+            
+            if (studySource.length === 0) {
                 alert('No hay tarjetas para estudiar');
                 return;
             }
             
-            studyTasks = shuffle ? [...pending].sort(() => Math.random() - 0.5) : [...pending];
+            studyTasks = shuffle ? [...studySource].sort(() => Math.random() - 0.5) : [...studySource];
             studyIndex = 0;
             isFlipped = false;
             
-            document.getElementById('studyTitle').textContent = shuffle ? '🔀 Estudio Aleatorio' : '📖 Modo Estudio';
+            let title = '📖 Modo Estudio';
+            if (currentFilter && currentFilter.type === 'subject') {
+                title = `📚 ${currentFilter.value}`;
+            }
+            if (shuffle) title = '🔀 Estudio Aleatorio';
+            
+            document.getElementById('studyTitle').textContent = title;
             document.getElementById('studyModal').classList.add('active');
             
             renderStudyCard();
