@@ -706,7 +706,12 @@
             <button class="filter-btn active" onclick="filterTasks('all')">Todas</button>
             <button class="filter-btn" onclick="filterTasks('pending')">Por estudiar</button>
             <button class="filter-btn" onclick="filterTasks('completed')">Completadas</button>
-            <button class="filter-btn" onclick="filterTasks('subject')">Por Materia</button>
+            <div style="position: relative; display: inline-block;">
+                <button class="filter-btn" id="btnPorMateria" onclick="toggleSubjectFilter()">Por Materia ▾</button>
+                <select id="subjectFilter" class="subject-filter-select" onchange="selectSubject(this.value)" style="display: none; position: absolute; top: 100%; left: 0; margin-top: 4px; background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 0.5rem; color: var(--text); font-size: 0.85rem; min-width: 200px; z-index: 100; cursor: pointer;">
+                    <option value="">Selecciona una materia...</option>
+                </select>
+            </div>
         </div>
         
         <!-- Lista -->
@@ -919,29 +924,68 @@
             }
         }
         
-        function filterTasks(filter) {
-            if (filter === 'subject') {
+        let subjectDropdownVisible = false;
+        
+        function toggleSubjectFilter() {
+            const select = document.getElementById('subjectFilter');
+            const btn = document.getElementById('btnPorMateria');
+            
+            if (subjectDropdownVisible) {
+                select.style.display = 'none';
+                btn.textContent = 'Por Materia ▾';
+                subjectDropdownVisible = false;
+            } else {
+                // Populate subjects
                 const subjects = [...new Set(tasks.map(t => t.subject))].sort();
                 if (subjects.length === 0) {
-                    alert('No hay materias para filtrar');
+                    alert('No hay materias para filtrar. Agrega tarjetas primero.');
                     return;
                 }
-                const selected = prompt('Selecciona una materia:\n' + subjects.map((s, i) => `${i + 1}. ${s}`).join('\n') + '\n\nIngresa el número:');
-                if (!selected) return;
-                const index = parseInt(selected) - 1;
-                if (index >= 0 && index < subjects.length) {
-                    currentFilter = { type: 'subject', value: subjects[index] };
-                } else {
-                    return;
-                }
+                select.innerHTML = '<option value="">Selecciona una materia...</option>' + 
+                    subjects.map(s => `<option value="${s}">${s}</option>`).join('');
+                select.style.display = 'block';
+                btn.textContent = 'Por Materia ▴';
+                subjectDropdownVisible = true;
+                select.focus();
+            }
+        }
+        
+        function selectSubject(subject) {
+            if (!subject) {
+                filterTasks('all');
+                return;
+            }
+            currentFilter = { type: 'subject', value: subject };
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('btnPorMateria').classList.add('active');
+            document.getElementById('btnPorMateria').textContent = 'Por Materia ▾';
+            document.getElementById('subjectFilter').style.display = 'none';
+            subjectDropdownVisible = false;
+            renderTasks();
+        }
+        
+        function filterTasks(filter) {
+            if (filter === 'subject') {
+                toggleSubjectFilter();
+                return;
             } else {
                 currentFilter = filter;
+                const select = document.getElementById('subjectFilter');
+                if (select) select.style.display = 'none';
+                const btn = document.getElementById('btnPorMateria');
+                if (btn) {
+                    btn.textContent = 'Por Materia ▾';
+                    btn.classList.remove('active');
+                }
+                subjectDropdownVisible = false;
             }
             
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
+            if (event && event.target) {
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+            }
             
             renderTasks();
         }
@@ -968,7 +1012,7 @@
                 taskList.innerHTML = `
                     <div class="empty">
                         <div class="empty-icon">📋</div>
-                        <p>${currentFilter === 'all' ? 'No hay tarjetas aún.<br>¡Agrega tu primera tarjeta!' : 'No hay tarjetas en esta categoría'}</p>
+                        <p>${currentFilter === 'all' ? 'No hay tarjetas aún.<br>¡Agrega tu primera tarjeta!' : currentFilter.type === 'subject' ? `No hay tarjetas en <strong>${currentFilter.value}</strong>` : 'No hay tarjetas en esta categoría'}</p>
                     </div>
                 `;
                 return;
