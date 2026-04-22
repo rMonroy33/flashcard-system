@@ -272,7 +272,10 @@ async def home():
                             <a href="/deck/${d.id}">${d.name}</a>
                             <div style="color:#666; font-size:0.85rem;">${d.card_count} cards • ${d.source}</div>
                         </div>
-                        <a href="/api/decks/${d.id}/export" style="color:#888;">📥</a>
+                        <div>
+                            <a href="/api/decks/${d.id}/export" style="color:#888; margin-right:10px;" title="Exportar">📥</a>
+                            <a href="/study/${d.id}" style="color:#00ff88;" title="Estudiar">📖</a>
+                        </div>
                     </div>
                 `).join('');
             }
@@ -321,7 +324,109 @@ async def view_deck(deck_id: str):
         <h1>{deck['name']}</h1>
         <p class="meta">{len(deck['cards'])} flashcards • {deck['source']}</p>
         {cards_html}
+        <div style="text-align:center;">
+            <a href="/study/{deck_id}" class="btn-study">📖 Modo Estudio</a>
+        </div>
     </div>
+</body>
+</html>"""
+
+# Endpoint: Modo estudio
+@app.get("/study/{deck_id}", response_class=HTMLResponse)
+async def study_deck(deck_id: str):
+    try:
+        deck = load_deck(deck_id)
+    except Exception:
+        return HTMLResponse("<h1>Deck no encontrado</h1><a href='/'>Volver</a>", status_code=404)
+    
+    cards_json = json.dumps(deck['cards'], ensure_ascii=False)
+    total = len(deck['cards'])
+    
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+    <title>Estudiar: {deck['name']} - FlashGen</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+        body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; display: flex; flex-direction: column; }}
+        .header {{ background: #16213e; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }}
+        .header h1 {{ color: #00d9ff; font-size: 1.2rem; }}
+        .counter {{ color: #888; }}
+        .container {{ flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }}
+        .card {{ background: #16213e; border-radius: 16px; padding: 2rem; max-width: 600px; width: 100%; text-align: center; }}
+        .card-front {{ font-size: 1.4rem; color: #00d9ff; margin-bottom: 2rem; }}
+        .card-back {{ background: #0f3460; padding: 1.5rem; border-radius: 12px; color: #ccc; display: none; }}
+        .btn-row {{ display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; }}
+        .btn {{ background: #00d9ff; color: #1a1a2e; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; }}
+        .btn:hover {{ background: #00b8d9; }}
+        .btn-next {{ background: #00ff88; }}
+        .btn-next:hover {{ background: #00dd77; }}
+        .progress-bar {{ position: fixed; bottom: 0; left: 0; height: 4px; background: #00d9ff; transition: width 0.3s; }}
+        .finish-screen {{ text-align: center; }}
+        .finish-screen h2 {{ color: #00ff88; margin-bottom: 1rem; }}
+        .back-link {{ color: #00d9ff; text-decoration: none; margin-top: 1rem; display: inline-block; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <a href="/deck/{deck_id}" style="color:#00d9ff; text-decoration:none;">← {deck['name']}</a>
+        <span class="counter" id="counter">1 / {total}</span>
+    </div>
+    
+    <div class="container" id="cardContainer">
+        <div class="card" id="studyCard">
+            <div class="card-front" id="cardFront">Cargando...</div>
+            <div class="card-back" id="cardBack"></div>
+            <div class="btn-row" id="btnRow" style="display:none;">
+                <button class="btn" onclick="showAnswer()">Mostrar Respuesta</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+    
+    <script>
+        const cards = {cards_json};
+        let currentIndex = 0;
+        
+        function renderCard(index) {{
+            const card = cards[index];
+            document.getElementById('cardFront').textContent = card.question;
+            document.getElementById('cardBack').textContent = card.answer;
+            document.getElementById('cardBack').style.display = 'none';
+            document.getElementById('btnRow').innerHTML = '<button class="btn" onclick="showAnswer()">Mostrar Respuesta</button>';
+            document.getElementById('btnRow').style.display = 'none';
+            document.getElementById('counter').textContent = (index + 1) + ' / ' + cards.length;
+            document.getElementById('progressBar').style.width = ((index + 1) / cards.length * 100) + '%';
+        }}
+        
+        function showAnswer() {{
+            document.getElementById('cardBack').style.display = 'block';
+            document.getElementById('btnRow').innerHTML = 
+                '<button class="btn btn-next" onclick="nextCard()">Siguiente →</button>';
+            document.getElementById('btnRow').style.display = 'flex';
+        }}
+        
+        function nextCard() {{
+            currentIndex++;
+            if (currentIndex >= cards.length) {{
+                document.getElementById('cardContainer').innerHTML = `
+                    <div class="finish-screen">
+                        <h2>🎉 ¡Terminaste!</h2>
+                        <p>Completaste las {total} tarjetas</p>
+                        <a href="/deck/{deck_id}" class="back-link">← Volver al mazo</a>
+                    </div>
+                `;
+                document.getElementById('progressBar').style.width = '100%';
+            }} else {{
+                renderCard(currentIndex);
+            }}
+        }}
+        
+        renderCard(0);
+    </script>
 </body>
 </html>"""
 
